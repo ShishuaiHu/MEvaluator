@@ -429,12 +429,14 @@ def aggregate_scores_for_experiment(score_file,
     return json_dict
 
 
-def evaluate_folder(folder_with_gts: str, folder_with_predictions: str, labels: tuple, **metric_kwargs):
+def evaluate_folder(folder_with_gts: str, folder_with_predictions: str, labels: tuple, output_name: str,
+                    **metric_kwargs):
     """
     writes a summary.json to folder_with_predictions
     :param folder_with_gts: folder where the ground truth segmentations are saved. Must be nifti files.
     :param folder_with_predictions: folder where the predicted segmentations are saved. Must be nifti files.
     :param labels: tuple of int with the labels in the dataset. For example (0, 1, 2, 3) for Task001_BrainTumour.
+    :param output_name: name of the summary.json file
     :return:
     """
     files_gt = subfiles(folder_with_gts, suffix=".nii.gz", join=False)
@@ -442,7 +444,8 @@ def evaluate_folder(folder_with_gts: str, folder_with_predictions: str, labels: 
     assert all([i in files_pred for i in files_gt]), "files missing in folder_with_predictions"
     assert all([i in files_gt for i in files_pred]), "files missing in folder_with_gts"
     test_ref_pairs = [(join(folder_with_predictions, i), join(folder_with_gts, i)) for i in files_pred]
-    res = aggregate_scores(test_ref_pairs, json_output_file=join(folder_with_predictions, "summary.json"),
+    output_name = output_name if output_name is not None else "summary.json"
+    res = aggregate_scores(test_ref_pairs, json_output_file=join(folder_with_predictions, output_name),
                            num_threads=8, labels=labels, **metric_kwargs)
     return res
 
@@ -466,5 +469,6 @@ def nnunet_evaluate_folder():
                                                                        "this case that would not gie any useful "
                                                                        "information.")
     parser.add_argument("-a", required=False, default=False, action="store_true", help="Advanced mode.")
+    parser.add_argument('-name', required=False, type=str, help="Output file name.")
     args = parser.parse_args()
-    return evaluate_folder(args.ref, args.pred, args.l, advanced=args.a)
+    return evaluate_folder(args.ref, args.pred, args.l, advanced=args.a, output_name=args.name)
