@@ -430,7 +430,7 @@ def aggregate_scores_for_experiment(score_file,
 
 
 def evaluate_folder(folder_with_gts: str, folder_with_predictions: str, labels: tuple, output_name: str,
-                    **metric_kwargs):
+                    check_pred: bool, check_gt: bool, **metric_kwargs):
     """
     writes a summary.json to folder_with_predictions
     :param folder_with_gts: folder where the ground truth segmentations are saved. Must be nifti files.
@@ -441,9 +441,11 @@ def evaluate_folder(folder_with_gts: str, folder_with_predictions: str, labels: 
     """
     files_gt = subfiles(folder_with_gts, suffix=".nii.gz", join=False)
     files_pred = subfiles(folder_with_predictions, suffix=".nii.gz", join=False)
-    assert all([i in files_pred for i in files_gt]), "files missing in folder_with_predictions"
-    assert all([i in files_gt for i in files_pred]), "files missing in folder_with_gts"
-    test_ref_pairs = [(join(folder_with_predictions, i), join(folder_with_gts, i)) for i in files_pred]
+    if check_pred:
+        assert all([i in files_pred for i in files_gt]), "files missing in folder_with_predictions"
+    if check_gt:
+        assert all([i in files_gt for i in files_pred]), "files missing in folder_with_gts"
+    test_ref_pairs = [(join(folder_with_predictions, i), join(folder_with_gts, i)) for i in files_gt]
     output_name = output_name if output_name is not None else "summary.json"
     res = aggregate_scores(test_ref_pairs, json_output_file=join(folder_with_predictions, output_name),
                            num_threads=8, labels=labels, **metric_kwargs)
@@ -470,5 +472,10 @@ def nnunet_evaluate_folder():
                                                                        "information.")
     parser.add_argument("-a", required=False, default=False, action="store_true", help="Advanced mode.")
     parser.add_argument('-name', required=False, type=str, help="Output file name.")
+    parser.add_argument('-ncp', "--no-check-pred", required=False, default=True, action="store_false",
+                        help="No check pred.")
+    parser.add_argument('-ncg', "--no-check-gt", required=False, default=True, action="store_false",
+                        help="No check gt.")
     args = parser.parse_args()
-    return evaluate_folder(args.ref, args.pred, args.l, advanced=args.a, output_name=args.name)
+    return evaluate_folder(args.ref, args.pred, args.l, advanced=args.a, output_name=args.name,
+                           check_pred=args.no_check_pred, check_gt=args.no_check_gt)

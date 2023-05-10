@@ -2,7 +2,7 @@ from setuptools import setup, find_namespace_packages
 
 setup(name='mevaluator',
       packages=find_namespace_packages(include=["mevaluator", "mevaluator.*"]),
-      version='0.1',
+      version='0.2',
       description='MEvaluator: evaluator for medical image segmentation.',
       url='https://github.com/ShishuaiHu/MEvaluator',
       author='',
