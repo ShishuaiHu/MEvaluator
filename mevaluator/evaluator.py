@@ -430,7 +430,7 @@ def aggregate_scores_for_experiment(score_file,
 
 
 def evaluate_folder(folder_with_gts: str, folder_with_predictions: str, labels: tuple, output_name: str,
-                    check_pred: bool, check_gt: bool, **metric_kwargs):
+                    check_pred: bool, check_gt: bool, num_threads: int, **metric_kwargs):
     """
     writes a summary.json to folder_with_predictions
     :param folder_with_gts: folder where the ground truth segmentations are saved. Must be nifti files.
@@ -448,7 +448,7 @@ def evaluate_folder(folder_with_gts: str, folder_with_predictions: str, labels: 
     test_ref_pairs = [(join(folder_with_predictions, i), join(folder_with_gts, i)) for i in files_gt]
     output_name = output_name if output_name is not None else "summary.json"
     res = aggregate_scores(test_ref_pairs, json_output_file=join(folder_with_predictions, output_name),
-                           num_threads=8, labels=labels, **metric_kwargs)
+                           num_threads=num_threads, labels=labels, **metric_kwargs)
     return res
 
 
@@ -476,6 +476,7 @@ def nnunet_evaluate_folder():
                         help="No check pred.")
     parser.add_argument('-ncg', "--no-check-gt", required=False, default=True, action="store_false",
                         help="No check gt.")
+    parser.add_argument('-t', "--thread", required=False, type=int, default=8, help="Number of threads.")
     args = parser.parse_args()
     return evaluate_folder(args.ref, args.pred, args.l, advanced=args.a, output_name=args.name,
-                           check_pred=args.no_check_pred, check_gt=args.no_check_gt)
+                           check_pred=args.no_check_pred, check_gt=args.no_check_gt, num_threads=args.thread)
